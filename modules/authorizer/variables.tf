@@ -94,5 +94,5 @@ variable "timeout" {
 variable "reserved_concurrent_executions" {
   type        = number
   description = "Reserved concurrent executions for the Lambda (-1 for unreserved)"
-  default     = 12
+  default     = -1
 }
