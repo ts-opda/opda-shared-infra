@@ -3,7 +3,7 @@ data "aws_region" "current" {}
 # ─── IAM ─────────────────────────────────────────────────────────────────────
 
 resource "aws_iam_role" "lambda" {
-  name = "${var.name}-facade-authorizer-role"
+  name = "${var.name}-authorizer-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -23,7 +23,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 }
 
 resource "aws_iam_role_policy" "lambda_ssm" {
-  name = "${var.name}-facade-authorizer-ssm-policy"
+  name = "${var.name}-authorizer-ssm-policy"
   role = aws_iam_role.lambda.id
 
   policy = jsonencode({
@@ -44,7 +44,7 @@ resource "aws_iam_role_policy" "lambda_ssm" {
 # ─── Security Group ──────────────────────────────────────────────────────────
 
 resource "aws_security_group" "lambda" {
-  name        = "${var.name}-facade-authorizer-sg"
+  name        = "${var.name}-authorizer-sg"
   description = "Controls outbound access for the authorizer Lambda"
   vpc_id      = var.vpc_id
 
@@ -64,13 +64,13 @@ resource "aws_security_group" "lambda" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(var.tags, { Name = "${var.name}-facade-authorizer-sg" })
+  tags = merge(var.tags, { Name = "${var.name}-authorizer-sg" })
 }
 
 # ─── CloudWatch Log Group ────────────────────────────────────────────────────
 
 resource "aws_cloudwatch_log_group" "lambda" {
-  name              = "/aws/lambda/${var.name}-facade-authorizer"
+  name              = "/aws/lambda/${var.name}-authorizer"
   retention_in_days = 30
 
   tags = var.tags
@@ -79,7 +79,7 @@ resource "aws_cloudwatch_log_group" "lambda" {
 # ─── Lambda Function ─────────────────────────────────────────────────────────
 
 resource "aws_lambda_function" "authorizer" {
-  function_name = "${var.name}-facade-authorizer"
+  function_name = "${var.name}-authorizer"
   role          = aws_iam_role.lambda.arn
   package_type  = "Image"
   image_uri     = var.image_uri
