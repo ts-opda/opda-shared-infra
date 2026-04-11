@@ -57,12 +57,14 @@ variable "ca_trusted_list" {
 
 variable "external_domain_name" {
   type        = string
-  description = "Base domain name; a Route53 CNAME record will be created at matls-<name>.<domain>"
+  description = "Base domain name; a Route53 CNAME record will be created at matls-<name>.<domain>. Leave empty to skip DNS record creation."
+  default     = ""
 }
 
 variable "external_hosted_zone_id" {
   type        = string
-  description = "Route53 hosted zone ID to create the CNAME record in"
+  description = "Route53 hosted zone ID to create the CNAME record in. Leave empty to skip DNS record creation."
+  default     = ""
 }
 
 variable "container_port" {

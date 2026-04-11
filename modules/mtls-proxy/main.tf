@@ -2,7 +2,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 locals {
-  ssm_base_path = "/${var.name}/facade"
+  ssm_base_path = "/${var.name}"
 }
 
 # ─── SSM Parameters ──────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ resource "aws_ssm_parameter" "ca_trusted_list" {
 # ─── NLB ─────────────────────────────────────────────────────────────────────
 
 resource "aws_security_group" "nlb" {
-  name        = "${var.name}-facade-nlb-sg"
+  name        = "${var.name}-nlb-sg"
   description = "Allow external HTTPS to the NLB"
   vpc_id      = var.vpc_id
 
@@ -53,7 +53,7 @@ resource "aws_security_group" "nlb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(var.tags, { Name = "${var.name}-facade-nlb-sg" })
+  tags = merge(var.tags, { Name = "${var.name}-nlb-sg" })
 }
 
 resource "aws_lb" "main" {
@@ -67,7 +67,7 @@ resource "aws_lb" "main" {
 }
 
 resource "aws_lb_target_group" "mtls" {
-  name        = "${var.name}-facade-mtls-tg"
+  name        = "${var.name}-mtls-tg"
   port        = var.container_port
   protocol    = "TCP"
   vpc_id      = var.vpc_id
@@ -96,14 +96,14 @@ resource "aws_lb_listener" "main" {
 # ─── ECS ─────────────────────────────────────────────────────────────────────
 
 resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "/ecs/${var.name}-facade-mtls"
+  name              = "/ecs/${var.name}-mtls"
   retention_in_days = 30
 
   tags = var.tags
 }
 
 resource "aws_iam_role" "ecs_task_execution" {
-  name = "${var.name}-facade-ecs-task-execution-role"
+  name = "${var.name}-ecs-task-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -123,7 +123,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
 }
 
 resource "aws_iam_role_policy" "ecs_ssm" {
-  name = "${var.name}-facade-ecs-ssm-policy"
+  name = "${var.name}-ecs-ssm-policy"
   role = aws_iam_role.ecs_task_execution.id
 
   policy = jsonencode({
@@ -142,7 +142,7 @@ resource "aws_iam_role_policy" "ecs_ssm" {
 }
 
 resource "aws_iam_role_policy" "ecs_apigw" {
-  name = "${var.name}-facade-ecs-apigw-policy"
+  name = "${var.name}-ecs-apigw-policy"
   role = aws_iam_role.ecs_task_execution.id
 
   policy = jsonencode({
@@ -159,7 +159,7 @@ resource "aws_iam_role_policy" "ecs_apigw" {
 }
 
 resource "aws_security_group" "ecs" {
-  name        = "${var.name}-facade-ecs-sg"
+  name        = "${var.name}-ecs-sg"
   description = "Controls access to the Fargate mTLS proxy service"
   vpc_id      = var.vpc_id
 
@@ -191,17 +191,17 @@ resource "aws_security_group" "ecs" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = merge(var.tags, { Name = "${var.name}-facade-ecs-sg" })
+  tags = merge(var.tags, { Name = "${var.name}-ecs-sg" })
 }
 
 resource "aws_ecs_cluster" "main" {
-  name = "${var.name}-facade-cluster"
+  name = "${var.name}-cluster"
 
   tags = var.tags
 }
 
 resource "aws_ecs_task_definition" "main" {
-  family                   = "${var.name}-facade-task"
+  family                   = "${var.name}-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.cpu
@@ -210,7 +210,7 @@ resource "aws_ecs_task_definition" "main" {
   task_role_arn            = aws_iam_role.ecs_task_execution.arn
 
   container_definitions = jsonencode([{
-    name      = "${var.name}-facade-container"
+    name      = "${var.name}-container"
     image     = var.image_uri
     essential = true
 
@@ -239,7 +239,7 @@ resource "aws_ecs_task_definition" "main" {
 }
 
 resource "aws_ecs_service" "main" {
-  name            = "${var.name}-facade-service"
+  name            = "${var.name}-service"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.main.arn
   desired_count   = 1
@@ -252,7 +252,7 @@ resource "aws_ecs_service" "main" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.mtls.arn
-    container_name   = "${var.name}-facade-container"
+    container_name   = "${var.name}-container"
     container_port   = var.container_port
   }
 
@@ -262,6 +262,8 @@ resource "aws_ecs_service" "main" {
 # ─── Route53 ─────────────────────────────────────────────────────────────────
 
 resource "aws_route53_record" "mtls" {
+  count   = var.external_hosted_zone_id != "" && var.external_domain_name != "" ? 1 : 0
+
   name    = "matls-${var.name}.${var.external_domain_name}"
   type    = "CNAME"
   zone_id = var.external_hosted_zone_id
