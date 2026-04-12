@@ -79,6 +79,10 @@ resource "aws_lb_target_group" "mtls" {
     port     = "traffic-port"
   }
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   tags = var.tags
 }
 
