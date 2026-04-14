@@ -83,7 +83,7 @@ resource "aws_lambda_function" "authorizer" {
   role          = aws_iam_role.lambda.arn
   package_type  = "Image"
   image_uri     = var.image_uri
-  architectures = ["arm64"]
+  architectures = ["x86_64"]
   memory_size   = var.memory_size
   timeout       = var.timeout
 
