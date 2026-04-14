@@ -102,6 +102,7 @@ resource "aws_lambda_function" "authorizer" {
       SSM_TRANSPORT_KEY_NAME         = var.ssm_transport_key_name
       SSM_TRANSPORT_CERTIFICATE_NAME = var.ssm_transport_certificate_name
       SSM_CA_TRUSTED_LIST_NAME       = var.ssm_ca_trusted_list_name
+      BYPASS_AUTH                    = tostring(var.bypass_auth)
     }
   }
 

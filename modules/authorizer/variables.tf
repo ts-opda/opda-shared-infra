@@ -96,3 +96,9 @@ variable "reserved_concurrent_executions" {
   description = "Reserved concurrent executions for the Lambda (-1 for unreserved)"
   default     = -1
 }
+
+variable "bypass_auth" {
+  type        = bool
+  description = "When true, BYPASS_AUTH=true is set on the Lambda — skips token introspection and cert binding. For dev/smoke-test only."
+  default     = false
+}
