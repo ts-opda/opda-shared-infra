@@ -36,6 +36,7 @@ resource "aws_iam_role_policy" "lambda_ssm" {
         var.ssm_transport_certificate_arn,
         var.ssm_transport_key_arn,
         var.ssm_ca_trusted_list_arn,
+        var.ssm_signing_key_arn,
       ]
     }]
   })
@@ -102,6 +103,7 @@ resource "aws_lambda_function" "authorizer" {
       SSM_TRANSPORT_KEY_NAME         = var.ssm_transport_key_name
       SSM_TRANSPORT_CERTIFICATE_NAME = var.ssm_transport_certificate_name
       SSM_CA_TRUSTED_LIST_NAME       = var.ssm_ca_trusted_list_name
+      SSM_SIGNING_KEY_NAME           = var.ssm_signing_key_name
       BYPASS_AUTH                    = tostring(var.bypass_auth)
     }
   }

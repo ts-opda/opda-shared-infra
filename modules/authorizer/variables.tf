@@ -102,3 +102,13 @@ variable "bypass_auth" {
   description = "When true, BYPASS_AUTH=true is set on the Lambda — skips token introspection and cert binding. For dev/smoke-test only."
   default     = false
 }
+
+variable "ssm_signing_key_name" {
+  type        = string
+  description = "SSM parameter name for the RS256 signing key PEM used in private_key_jwt assertions"
+}
+
+variable "ssm_signing_key_arn" {
+  type        = string
+  description = "ARN of the signing key SSM parameter (for IAM policy)"
+}
