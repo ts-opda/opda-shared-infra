@@ -57,7 +57,7 @@ resource "aws_security_group" "nlb" {
 }
 
 resource "aws_lb" "main" {
-  name               = "${var.name}-facade"
+  name               = var.name
   load_balancer_type = "network"
   subnets            = var.public_subnet_ids
   security_groups    = [aws_security_group.nlb.id]

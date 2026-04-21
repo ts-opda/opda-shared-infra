@@ -4,7 +4,7 @@ data "aws_region" "current" {}
 # ─── CloudWatch Logs ─────────────────────────────────────────────────────────
 
 resource "aws_cloudwatch_log_group" "access_logs" {
-  name              = "/aws/apigateway/${var.name}-facade-access-logs"
+  name              = "/aws/apigateway/${var.name}-access-logs"
   retention_in_days = var.access_log_retention_days
 
   tags = var.tags
@@ -12,7 +12,7 @@ resource "aws_cloudwatch_log_group" "access_logs" {
 
 # IAM role allowing API GW to write to CloudWatch Logs
 resource "aws_iam_role" "api_gw_logging" {
-  name = "${var.name}-facade-apigw-logging-role"
+  name = "${var.name}-apigw-logging-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -38,7 +38,7 @@ resource "aws_api_gateway_account" "main" {
 # ─── REST API ─────────────────────────────────────────────────────────────────
 
 resource "aws_api_gateway_rest_api" "main" {
-  name = "${var.name}-facade"
+  name = var.name
   body = var.openapi_body
 
   endpoint_configuration {
