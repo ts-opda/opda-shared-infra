@@ -67,7 +67,7 @@ resource "aws_lb" "main" {
 }
 
 resource "aws_lb_target_group" "mtls" {
-  name        = "${var.name}-mtls-tg"
+  name        = "${substr(var.name, 0, min(length(var.name), 28))}-tg"
   port        = var.container_port
   protocol    = "TCP"
   vpc_id      = var.vpc_id
