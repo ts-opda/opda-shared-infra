@@ -32,6 +32,27 @@ resource "aws_ssm_parameter" "ca_trusted_list" {
   tags = var.tags
 }
 
+# ─── Optional server TLS cert (public CA, e.g. Let's Encrypt) ───────────────
+# When provided the proxy uses these for inbound TLS instead of the Raidiam
+# transport cert, keeping the transport cert available for authorizer outbound
+# auth only.
+
+resource "aws_ssm_parameter" "server_tls_certificate" {
+  count = var.server_tls_certificate != "" ? 1 : 0
+  name  = "${local.ssm_base_path}/server_tls_certificate"
+  type  = "String"
+  value = var.server_tls_certificate
+  tags  = var.tags
+}
+
+resource "aws_ssm_parameter" "server_tls_key" {
+  count = var.server_tls_key != "" ? 1 : 0
+  name  = "${local.ssm_base_path}/server_tls_key"
+  type  = "SecureString"
+  value = var.server_tls_key
+  tags  = var.tags
+}
+
 # ─── NLB ─────────────────────────────────────────────────────────────────────
 
 resource "aws_security_group" "nlb" {
@@ -136,11 +157,15 @@ resource "aws_iam_role_policy" "ecs_ssm" {
       Sid    = "AllowReadCertParams"
       Effect = "Allow"
       Action = ["ssm:GetParameter", "ssm:GetParameters"]
-      Resource = [
-        aws_ssm_parameter.transport_key.arn,
-        aws_ssm_parameter.transport_certificate.arn,
-        aws_ssm_parameter.ca_trusted_list.arn,
-      ]
+      Resource = concat(
+        [
+          aws_ssm_parameter.transport_key.arn,
+          aws_ssm_parameter.transport_certificate.arn,
+          aws_ssm_parameter.ca_trusted_list.arn,
+        ],
+        var.server_tls_key != "" ? [aws_ssm_parameter.server_tls_key[0].arn] : [],
+        var.server_tls_certificate != "" ? [aws_ssm_parameter.server_tls_certificate[0].arn] : [],
+      )
     }]
   })
 }
@@ -226,8 +251,8 @@ resource "aws_ecs_task_definition" "main" {
     environment = [
       { name = "PROXY_HOST_TARGET",              value = var.api_invoke_url },
       { name = "REGION",                         value = data.aws_region.current.name },
-      { name = "SSM_TRANSPORT_KEY_NAME",         value = aws_ssm_parameter.transport_key.name },
-      { name = "SSM_TRANSPORT_CERTIFICATE_NAME", value = aws_ssm_parameter.transport_certificate.name },
+      { name = "SSM_TRANSPORT_KEY_NAME",         value = var.server_tls_key != "" ? aws_ssm_parameter.server_tls_key[0].name : aws_ssm_parameter.transport_key.name },
+      { name = "SSM_TRANSPORT_CERTIFICATE_NAME", value = var.server_tls_certificate != "" ? aws_ssm_parameter.server_tls_certificate[0].name : aws_ssm_parameter.transport_certificate.name },
       { name = "SSM_CA_TRUSTED_LIST_NAME",       value = aws_ssm_parameter.ca_trusted_list.name },
     ]
 

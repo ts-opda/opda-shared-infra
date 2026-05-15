@@ -67,6 +67,19 @@ variable "external_hosted_zone_id" {
   default     = ""
 }
 
+variable "server_tls_certificate" {
+  type        = string
+  description = "PEM certificate for server TLS (e.g. Let's Encrypt fullchain). When set the proxy uses this for inbound TLS instead of transport_certificate, keeping the Raidiam transport cert available exclusively for authorizer outbound auth. Leave empty to fall back to transport_certificate."
+  default     = ""
+}
+
+variable "server_tls_key" {
+  type        = string
+  description = "PEM private key matching server_tls_certificate. Leave empty when not using a separate server TLS cert."
+  sensitive   = true
+  default     = ""
+}
+
 variable "container_port" {
   type        = number
   description = "Port the mTLS proxy container listens on"
